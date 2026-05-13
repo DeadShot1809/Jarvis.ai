@@ -23,33 +23,23 @@ async function sendMessage() {
 
   try {
 
-    const response = await fetch(
-      "https://api.groq.com/openai/v1/chat/completions",
-      {
-        method: "POST",
-
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer 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"
-        },
-
-        body: JSON.stringify({
-
-          model: "llama-3.3-70b-versatile",
-
-          messages: [
-            {
-              role: "user",
-              content: userMessage
-            }
-          ],
-
-          temperature: 0.7,
-          max_tokens: 1024
-
-        })
-      }
-    );
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          {
+            role: 'user',
+            content: userMessage
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 1024
+      })
+    });
 
     const data = await response.json();
 
