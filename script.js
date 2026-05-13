@@ -1,121 +1,41 @@
+let conversationHistory = []; // track full chat for multi-turn memory
+let isLoading = false;        // prevent double sends
+
+function scrollToBottom() {
+  const chatBox = document.getElementById("chat-box");
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function dismissKeyboard() {
+  document.activeElement.blur(); // closes iOS keyboard after send
+}
+
+function showTyping() {
+  const chatBox = document.getElementById("chat-box");
+  chatBox.innerHTML += `
+    <div class="ai-message" id="typing-indicator">
+      Thinking...
+    </div>
+  `;
+  scrollToBottom();
+}
+
+function removeTyping() {
+  const indicator = document.getElementById("typing-indicator");
+  if (indicator) indicator.remove();
+}
+
 async function sendMessage() {
+  if (isLoading) return; // block while waiting for reply
 
   const input = document.getElementById("user-input");
   const chatBox = document.getElementById("chat-box");
-
   const userMessage = input.value.trim();
-
   if (!userMessage) return;
 
-  // Show user message
-
-  chatBox.innerHTML += `
-    <div class="user-message">
-      ${userMessage}
-    </div>
-  `;
-
+  isLoading = true;
   input.value = "";
+  dismissKeyboard(); // close keyboard on mobile after send
 
-  // Auto scroll
-
-  chatBox.scrollTop = chatBox.scrollHeight;
-
-  try {
-
-    const response = await fetch(
-      "https://api.groq.com/openai/v1/chat/completions",
-      {
-        method: "POST",
-
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer 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"
-        },
-
-        body: JSON.stringify({
-
-          model: "llama-3.3-70b-versatile",
-
-          messages: [
-            {
-              role: "user",
-              content: userMessage
-            }
-          ],
-
-          temperature: 0.7,
-          max_tokens: 1024
-
-        })
-      }
-    );
-
-    const data = await response.json();
-
-    console.log(data);
-
-    // Handle API errors
-
-    if (data.error) {
-
-      chatBox.innerHTML += `
-        <div class="ai-message">
-          Error: ${data.error.message}
-        </div>
-      `;
-
-      return;
-    }
-
-    // Extract AI reply safely
-
-    const aiReply =
-      data.choices?.[0]?.message?.content;
-
-    if (!aiReply) {
-
-      chatBox.innerHTML += `
-        <div class="ai-message">
-          No response received.
-        </div>
-      `;
-
-      return;
-    }
-
-    // Show AI message
-
-    chatBox.innerHTML += `
-      <div class="ai-message">
-        ${aiReply}
-      </div>
-    `;
-
-    // Auto scroll
-
-    chatBox.scrollTop = chatBox.scrollHeight;
-
-  } catch (error) {
-
-    console.error(error);
-
-    chatBox.innerHTML += `
-      <div class="ai-message">
-        Error: ${error.message}
-      </div>
-    `;
-  }
-}
-
-/* Enter key support */
-
-document
-  .getElementById("user-input")
-  .addEventListener("keypress", function(event) {
-
-    if (event.key === "Enter") {
-      sendMessage();
-    }
-
-});
+  // Sanitize to prevent XSS (never inject raw user text into innerHTML)
+  const safe = d
